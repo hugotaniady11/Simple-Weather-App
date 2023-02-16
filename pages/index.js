@@ -1,11 +1,45 @@
 import Head from 'next/head'
-import Image from 'next/image'
 import { Inter } from '@next/font/google'
-import styles from '@/styles/Home.module.css'
+import { useState } from 'react';
+import WeatherComponent from '@/components/WeatherInfoComponent';
+// import styles from '@/styles/Home.module.css'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
+
+  const api = {
+    key: "578be37677c1c2d2eaa5d8dc5e6499a5",
+    base: "https://api.openweathermap.org/data/2.5/"
+  }
+
+  const [query, setQuery] = useState('');
+  const [weather, setWeather] = useState('');
+  const [city] = useState();
+
+  const search = evt => {
+    if (evt.key === "Enter"){
+      fetch(`${api.base}weather?q=${query}&units=metric&appID=${api.key}`)
+      .then(res => res.json())
+      .then(result => {
+        setWeather(result);
+        setQuery('');
+      });
+    }
+  }
+
+  const dateBuilder = (d) => {
+    let months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    let days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+    let day = days[d.getDay()];
+    let date = d.getDate();
+    let month = months[d.getMonth()];
+    let year = d.getFullYear();
+
+    return `${day} ${date} ${month} ${year}`
+  }
+
   return (
     <>
       <Head>
@@ -14,110 +48,41 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className={styles.main}>
-        <div className={styles.description}>
-          <p>
-            Get started by editing&nbsp;
-            <code className={styles.code}>pages/index.js</code>
-          </p>
-          <div>
-            <a
-              href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              By{' '}
-              <Image
-                src="/vercel.svg"
-                alt="Vercel Logo"
-                className={styles.vercelLogo}
-                width={100}
-                height={24}
-                priority
-              />
-            </a>
+      <div className={
+      (typeof weather.main != "undefined") ? ((weather.main.temp > 24) ? 'app warm' : 'app') : 'app'}>
+        <main>
+          <div className='search-box'>
+            <input 
+            type="text" 
+            className="search-bar" 
+            placeholder="Enter Location" 
+            onChange={e => setQuery(e.target.value)}
+            value={query}
+            onKeyPress={search}/>
           </div>
-        </div>
-
-        <div className={styles.center}>
-          <Image
-            className={styles.logo}
-            src="/next.svg"
-            alt="Next.js Logo"
-            width={180}
-            height={37}
-            priority
-          />
-          <div className={styles.thirteen}>
-            <Image
-              src="/thirteen.svg"
-              alt="13"
-              width={40}
-              height={31}
-              priority
-            />
+            {(typeof weather.main !="undefined") ? (
+              <div>
+                <div className='location-box'>
+              <div className='location'>{weather.name}, {weather.sys.country}</div>
+              <div className='date'>{dateBuilder(new Date())}</div>
+            </div>
+          <div className='weather-box'>
+            <div className='temp'>
+              {Math.round(weather.main.temp)}°C
+            </div>
+            <div className='weather'>
+              {weather.weather[0].main}
+            </div>
           </div>
-        </div>
-
-        <div className={styles.grid}>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Docs <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Find in-depth information about Next.js features and&nbsp;API.
-            </p>
-          </a>
-
-          <a
-            href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Learn <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Learn about Next.js in an interactive course with&nbsp;quizzes!
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Templates <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Discover and deploy boilerplate example Next.js&nbsp;projects.
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Deploy <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Instantly deploy your Next.js site to a shareable URL
-              with&nbsp;Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
+          <WeatherComponent weather={weather} city={city} />
+              </div>
+            ): (
+              <div>
+                <p className='city'>Find Weather of your city</p>
+              </div>
+            )}
+        </main>
+      </div>
     </>
   )
 }
